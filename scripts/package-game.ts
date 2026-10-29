@@ -9,13 +9,14 @@ import { scoringConfiguration, type Configuration } from '../src/shell/config.js
 
 export type GameFiles = Record<string, Uint8Array>;
 const root = fileURLToPath(new URL('../', import.meta.url));
-const TITLES: Record<Configuration['game'], string> = { unbreakable: 'UNBREAKABLE', 'tap-the-name': 'TAP THE NAME', 'full-row': 'FULL ROW' };
+const TITLES: Record<Configuration['game'], string> = { unbreakable: 'UNBREAKABLE', 'tap-the-name': 'TAP THE NAME', 'full-row': 'FULL ROW', 'roll-call-run': 'ROLL CALL RUN' };
 
 const common = { absWorkingDir: root, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', minify: true, write: false, legalComments: 'inline' } as const;
 
 export async function packageGame(configuration: Configuration): Promise<GameFiles> {
   const [browser, verifier, template, stylesheet, license, notice] = await Promise.all([
-    build({ ...common, entryPoints: [`src/entries/${configuration.game}.ts`], loader: { '.jpg': 'dataurl' } }),
+    // __DEV_ANY_ORIGIN__ is only ever true in scripts/dev-flow.ts: false here, so dev-only code is dropped from the bundle
+    build({ ...common, entryPoints: [`src/entries/${configuration.game}.ts`], loader: { '.jpg': 'dataurl', '.webp': 'dataurl' }, define: { __DEV_ANY_ORIGIN__: 'false' } }),
     build({ ...common, entryPoints: [`src/verifiers/${configuration.game}.ts`] }),
     readFile(new URL('../src/index.html', import.meta.url), 'utf8'),
     readFile(new URL('../src/shell/styles.css', import.meta.url)),

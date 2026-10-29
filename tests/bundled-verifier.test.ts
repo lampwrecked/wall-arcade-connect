@@ -12,10 +12,12 @@ import { Coordinator, loadBuiltVerifier } from './helpers/coordinator.js';
 
 const base = { groupId: '00000000-0000-4000-8000-000000000000', studioUrl: 'https://studio.superrare.com', apiUrl: 'https://api.superrare.com',
   connectUrl: 'https://connect.superrare.com', display: 'popup' } as const;
-const CONFIGS: Record<'unbreakable' | 'tap-the-name' | 'full-row', Configuration> = {
+const CONFIGS: Record<'unbreakable' | 'tap-the-name' | 'full-row' | 'roll-call-run', Configuration> = {
   unbreakable: { ...base, appId: 'c5285ae3-512e-464a-aceb-17571e1fe3e9', appOrigin: 'https://7x2phv5j.srstudio.dev', game: 'unbreakable' },
   'tap-the-name': { ...base, appId: '62a44855-272e-4b15-bc3b-f5fc803129ad', appOrigin: 'https://fgud7mby.srstudio.dev', game: 'tap-the-name' },
   'full-row': { ...base, appId: '5932be45-7ccb-483a-916d-0dcebff40ca2', appOrigin: 'https://yfq52eu3.srstudio.dev', game: 'full-row' },
+  // not created on Studio yet: test identifiers only
+  'roll-call-run': { ...base, appId: '00000000-0000-4000-8000-0000000000aa', appOrigin: 'https://roll-call-run.example.com', game: 'roll-call-run' },
 };
 
 async function built(game: keyof typeof CONFIGS) {
@@ -24,7 +26,7 @@ async function built(game: keyof typeof CONFIGS) {
   return { files, verifier, config: JSON.parse(strFromU8(files['scoring-config.json'] as Uint8Array)) as Record<string, unknown> };
 }
 
-for (const game of ['unbreakable', 'tap-the-name', 'full-row'] as const) {
+for (const game of ['unbreakable', 'tap-the-name', 'full-row', 'roll-call-run'] as const) {
   test(`${game}: the archive has Studio's required root layout and a matching scoring config`, async () => {
     const { files, config } = await built(game);
     for (const required of ['index.html', 'config.json', 'server-verifier.js', 'scoring-config.json']) assert.ok(files[required], `missing ${required}`);

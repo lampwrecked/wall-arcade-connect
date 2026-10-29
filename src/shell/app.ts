@@ -479,7 +479,8 @@ export async function startApp(adapter: GameAdapter): Promise<void> {
     const mine = myEntry(wallet);
     const top = board.slice(0, 3);
     if (mine && mine.rank > 3) top.push(mine);
-    boardPost.hidden = !top.length || adapter.id === 'tap-the-name';
+    // the card service draws boards for UNBREAKABLE and FULL ROW only
+    boardPost.hidden = !top.length || adapter.id === 'tap-the-name' || adapter.id === 'roll-call-run';
     if (!boardPost.hidden) prepareBoardPost();
     if (!top.length) {
       ui.boardList.replaceChildren(node('li', boardFailed ? 'Scores could not be loaded right now.' : boardLoaded ? 'No scores yet this week. Be the first.' : 'Loading scores…', 'empty'));

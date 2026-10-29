@@ -5,16 +5,18 @@ import { join } from 'node:path';
 import { build } from 'esbuild';
 
 const out = process.argv[2];
-const game = process.argv[3] === 'tap-the-name' || process.argv[3] === 'full-row' ? process.argv[3] : 'unbreakable';
-if (!out) throw new Error('Usage: dev-flow.ts <output-dir> [unbreakable|tap-the-name|full-row]');
+const game = process.argv[3] === 'tap-the-name' || process.argv[3] === 'full-row' || process.argv[3] === 'roll-call-run' ? process.argv[3] : 'unbreakable';
+if (!out) throw new Error('Usage: dev-flow.ts <output-dir> [unbreakable|tap-the-name|full-row|roll-call-run]');
 await mkdir(join(out, 'assets'), { recursive: true });
 await build({
   entryPoints: [`src/entries/${game}.ts`], define: { __FAKE_GAME__: JSON.stringify(game), __DEV_ANY_ORIGIN__: 'true' }, outfile: join(out, 'assets/app.js'), bundle: true, format: 'esm', platform: 'browser',
-  target: 'es2022', loader: { '.jpg': 'dataurl' }, alias: { '@rareprotocol/connect': './src/dev/fake-connect.ts' }, sourcemap: true,
+  target: 'es2022', loader: { '.jpg': 'dataurl', '.webp': 'dataurl' }, alias: { '@rareprotocol/connect': './src/dev/fake-connect.ts' }, sourcemap: true,
 });
 // A game not deployed yet has no deploy/<game>.config.json: the page runs on localhost with placeholder identifiers
-// (never valid on Studio; the origin check is skipped on localhost only).
-const config = await readFile(`deploy/${game}.config.json`, 'utf8').then((text) => JSON.parse(text)).catch(() => ({
+// (never valid on Studio; the origin check is skipped on localhost only). So does one whose deploy config is still the
+// placeholder (an .invalid origin, refused on purpose until the real app is created).
+const config = await readFile(`deploy/${game}.config.json`, 'utf8').then((text) => JSON.parse(text) as { appOrigin?: string })
+  .then((c) => { if (String(c.appOrigin).endsWith('.invalid')) throw new Error('placeholder config'); return c; }).catch(() => ({
   appId: '00000000-0000-4000-8000-00000000f001', groupId: '00000000-0000-4000-8000-00000000f002',
   studioUrl: 'https://studio.superrare.com', apiUrl: 'https://api.superrare.com', connectUrl: 'https://connect.superrare.com',
   appOrigin: 'https://full-row.example.com', display: 'embed', game, hubUrl: 'https://6972mvu4.srstudio.dev/',
